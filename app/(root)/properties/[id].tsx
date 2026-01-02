@@ -35,8 +35,8 @@ interface PropertyDocument extends Models.Document {
   rating: number;
   facilities: string[];
   agent: string | Models.Document;
-  reviews: string[] | Models.Document[];
-  gallery: string[] | Models.Document[];
+  reviews: Models.Document[]; // Now guaranteed to be Documents, not IDs
+  gallery: Models.Document[]; // Now guaranteed to be Documents, not IDs
   geolocation?: string;
 }
 
@@ -54,6 +54,7 @@ const Property = () => {
       id: id!,
     },
   });
+
 
   if (loading) {
     return (
@@ -92,15 +93,15 @@ const Property = () => {
       ? null
       : (typedProperty.agent as Models.Document);
 
-  const reviews =
-    typedProperty.reviews?.filter(
-      (review): review is Models.Document => typeof review !== "string"
-    ) || [];
+  // Reviews are now guaranteed to be Documents (not strings)
+  const reviews = Array.isArray(typedProperty.reviews)
+    ? typedProperty.reviews
+    : [];
 
-  const gallery =
-    typedProperty.gallery?.filter(
-      (item): item is Models.Document => typeof item !== "string"
-    ) || [];
+  // Gallery is now guaranteed to be Documents (not strings)
+  const gallery = Array.isArray(typedProperty.gallery)
+    ? typedProperty.gallery
+    : [];
 
   const getFacilityIcon = (facilityName: string) => {
     const facility = facilitiesData.find(
@@ -465,14 +466,16 @@ const Property = () => {
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => setShowAllReviews(!showAllReviews)}
-                  className="bg-primary-100/40 px-3 py-1.5 rounded-full"
-                >
-                  <Text className="text-primary-300 text-xs font-rubik-bold">
-                    {showAllReviews ? "Ver menos" : "Ver todas"}
-                  </Text>
-                </TouchableOpacity>
+                {reviews.length > 3 && (
+                  <TouchableOpacity
+                    onPress={() => setShowAllReviews(!showAllReviews)}
+                    className="bg-primary-100/40 px-3 py-1.5 rounded-full"
+                  >
+                    <Text className="text-primary-300 text-xs font-rubik-bold">
+                      {showAllReviews ? "Ver menos" : "Ver todas"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Reviews List */}
@@ -524,7 +527,6 @@ const Property = () => {
             <Text className="text-primary-300 text-start text-2xl font-rubik-bold">
               ${(typedProperty.price || 0).toLocaleString()}
             </Text>
-            <Text className="text-black-200 text-xs font-rubik">/mês</Text>
           </View>
 
           <TouchableOpacity className="flex-1 flex flex-row items-center justify-center bg-primary-300 py-3.5 rounded-full active:bg-primary-400 shadow-md shadow-primary-300/30">

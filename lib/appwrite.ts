@@ -1,15 +1,14 @@
-import {
-    Client,
-    Account,
-    ID,
-    Databases,
-    OAuthProvider,
-    Avatars,
-    Query,
-    Storage,
-} from "react-native-appwrite";
 import * as Linking from "expo-linking";
 import { openAuthSessionAsync } from "expo-web-browser";
+import {
+    Account,
+    Avatars,
+    Client,
+    Databases,
+    OAuthProvider,
+    Query,
+    Storage
+} from "react-native-appwrite";
 
 export const config = {
     platform: "com.lsdev.statelar",
@@ -20,7 +19,6 @@ export const config = {
     reviewsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_REVIEWS_COLLECTION_ID,
     agentsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_AGENTS_COLLECTION_ID,
     propertiesCollectionId: process.env.EXPO_PUBLIC_APPWRITE_PROPERTIES_COLLECTION_ID,
-    // bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID,
 };
 
 export const client = new Client();
@@ -151,17 +149,71 @@ export async function getProperties({
     }
 }
 
-// write function to get property by id
 export async function getPropertyById({ id }: { id: string }) {
     try {
-        const result = await databases.getDocument(
+        // 1. Busca a propriedade
+        const property = await databases.getDocument(
             config.databaseId!,
             config.propertiesCollectionId!,
             id
         );
-        return result;
+
+        let reviewsData = [];
+        try {
+            const reviewsResponse = await databases.listDocuments(
+                config.databaseId!,
+                config.reviewsCollectionId!,
+                [
+                    Query.equal('property', id) // ← CAMPO "property" que você criou
+                ]
+            );
+
+            reviewsData = reviewsResponse.documents;
+
+        } catch (error) {
+            reviewsData = [];
+        }
+
+        // 3. Busca agente (mantenha seu código atual)
+        let agentData = null;
+        if (property.agent) {
+            try {
+                agentData = await databases.getDocument(
+                    config.databaseId!,
+                    config.agentsCollectionId!,
+                    property.agent
+                );
+            } catch (error) {
+                console.warn(`⚠️ Erro ao buscar agente: ${error}`);
+            }
+        }
+
+        // 4. Busca galeria (mantenha seu código atual)
+        let galleryData = [];
+        if (property.gallery && Array.isArray(property.gallery) && property.gallery.length > 0) {
+            try {
+                const galleryPromises = property.gallery.map(galleryId =>
+                    databases.getDocument(
+                        config.databaseId!,
+                        config.galleriesCollectionId!,
+                        galleryId
+                    ).catch(() => null)
+                );
+                galleryData = (await Promise.all(galleryPromises)).filter(item => item !== null);
+            } catch (error) {
+                console.warn("⚠️ Erro ao buscar galeria:", error);
+            }
+        }
+
+        // 5. Retorna tudo combinado
+        return {
+            ...property,
+            agent: agentData,
+            reviews: reviewsData,
+            gallery: galleryData,
+        };
     } catch (error) {
-        console.error(error);
+        console.error("💥 ERRO FATAL ao buscar propriedade:", error);
         return null;
     }
 }
