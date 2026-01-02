@@ -74,7 +74,7 @@ const Explore = () => {
               </TouchableOpacity>
 
               <Text className="text-base mr-2 text-center font-rubik-medium text-black-300">
-                Search for Your Ideal Home
+                Procure sua casa ideal
               </Text>
               <Image source={icons.bell} className="w-6 h-6" />
             </View>
