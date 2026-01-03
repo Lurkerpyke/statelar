@@ -71,34 +71,50 @@ export const settings = [
   {
     title: "My Bookings",
     icon: icons.calendar,
+    action: "bookings",
+    route: undefined,
   },
   {
     title: "Payments",
     icon: icons.wallet,
+    action: "payments",
+    route: undefined,
   },
   {
     title: "Profile",
     icon: icons.person,
+    action: "profile",
+    route: undefined,
   },
   {
     title: "Notifications",
     icon: icons.bell,
+    action: "notifications",
+    route: undefined,
   },
   {
     title: "Security",
     icon: icons.shield,
+    action: "navigate",
+    route: "/(root)/configs/security",
   },
   {
     title: "Language",
     icon: icons.language,
+    action: "language",
+    route: undefined,
   },
   {
     title: "Help Center",
     icon: icons.info,
+    action: "help",
+    route: undefined,
   },
   {
     title: "Invite Friends",
     icon: icons.people,
+    action: "navigate",
+    route: "/(root)/configs/invite",
   },
 ];
 
